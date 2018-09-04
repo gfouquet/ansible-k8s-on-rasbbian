@@ -1,0 +1,4 @@
+profile static_eth0
+static ip_address={{ ansible_host }}/24
+static routers={{ gateway_ip_addr }}
+static domain_name_servers={{ dns_ip_addr }}

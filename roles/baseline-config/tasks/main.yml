@@ -1,3 +1,11 @@
 ---
 - name: "Set hostname"
   command: "raspi-config nonint do_hostname {{ inventory_hostname }}"
+
+- name: "Configure static ip & network"
+  template:
+    src: dhcpcd.conf.j2
+    dest: /etc/dhcpcd.conf
+    owner: root
+    group: netdev
+    mode: 0664

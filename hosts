@@ -4,7 +4,7 @@ ansible_user=pi
 ansible_ssh_pass=raspberry
 
 gateway_ip_addr=192.168.1.1
-gateway_ip_addr=192.168.1.1
+dns_ip_addr=192.168.1.1
 
 [masters]
 k8s-master-1 ansible_host=192.168.1.21
