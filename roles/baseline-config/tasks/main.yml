@@ -10,8 +10,19 @@
     group: netdev
     mode: 0664
 
+- name: Get Docker installer
+  get_url:
+    url: http://get.docker.com
+    dest: /tmp/install-docker
+    mode: "u+x"
+
 - name: Install Docker
-  shell: curl -sSL get.docker.com | sh
+  command: /tmp/install-docker
+
+- name: Remove installer
+  file:
+    path: /tmp/install-docker
+    state: absent
 
 - name: Create Docker group
   group:
