@@ -1,11 +1,27 @@
 ---
-- name: "Set hostname"
+- name: Set hostname
   command: "raspi-config nonint do_hostname {{ inventory_hostname }}"
 
-- name: "Configure static ip & network"
+- name: Configure static ip & network
   template:
     src: dhcpcd.conf.j2
     dest: /etc/dhcpcd.conf
     owner: root
     group: netdev
     mode: 0664
+
+- name: Install Docker
+  shell: curl -sSL get.docker.com | sh
+
+- name: Create Docker group
+  group:
+    name: docker
+    state: present
+
+- name: Add current user to docker group
+  user:
+    name: "{{ ansible_user }}"
+    state: present
+    groups: docker
+
+
