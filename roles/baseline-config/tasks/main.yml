@@ -35,4 +35,11 @@
     state: present
     groups: docker
 
+- name: Turn off swap
+  command: dphys-swapfile swapoff
 
+- name: Remove swap
+  command: dphys-swapfile uninstall
+
+- name: Remove swap utility
+  command: update-rc.d dphys-swapfile remove
