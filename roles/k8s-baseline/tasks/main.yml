@@ -1,4 +1,20 @@
 ---
+- name: Create ssh folder
+  file:
+    path: "~{{ ansible_user }}/.ssh"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: pi
+    mode: 0700
+
+- name: Set authorized ssh keys
+  template:
+    src: authorized_keys.j2
+    dest: "~{{ ansible_user }}/.ssh/authorized_keys"
+    owner: "{{ ansible_user }}"
+    group: pi
+    mode: 0600
+
 - name: Set hostname
   command: "raspi-config nonint do_hostname {{ inventory_hostname }}"
 
