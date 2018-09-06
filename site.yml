@@ -6,3 +6,16 @@
     - include_role:
         name: k8s-baseline
 
+- hosts: masters
+  remote_user: pi
+  become: yes
+  tasks:
+    - include_role:
+        name: k8s-master
+
+- hosts: workers
+  remote_user: pi
+  become: yes
+  tasks:
+    - include_role:
+        name: k8s-worker
