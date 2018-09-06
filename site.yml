@@ -2,5 +2,7 @@
 - hosts: all
   remote_user: pi
   become: yes
-  roles:
-  - baseline-config
+  tasks:
+    - include_role:
+        name: k8s-baseline
+

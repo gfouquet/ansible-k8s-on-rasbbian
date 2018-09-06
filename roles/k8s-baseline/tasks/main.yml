@@ -45,17 +45,18 @@
   command: update-rc.d dphys-swapfile remove
 
 - name: Configure cgroups
-  lineinfile:
-    path: /boot/cmdline.txt
-    line: group_enable=cpuset cgroup_memory=1
-    state: present
-  register: cgroups_result
+  copy:
+    src: cmdline.txt
+    dest: /boot/cmdline.txt
+    owner: root
+    mode: 0755
+  register: cmdline
 
 - name: Reboot on cgroup config change
   shell: "sleep 5 && reboot"
   async: 1
   poll: 0
-  when: cgroups_result is changed
+  when: cmdline is changed
 
 - name: Wait for the reboot to complete if there was a change
   wait_for_connection:
@@ -63,7 +64,7 @@
     sleep: 5
     delay: 5
     timeout: 300
-  when: cgroups_result is changed
+  when: cmdline is changed
 
 - name: Add k8s repo key
   apt_key:
@@ -72,7 +73,7 @@
 
 - name: Add k8s repo
   apt_repository:
-    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    repo: deb http://apt.kubernetes.io/ kubernetes-stretch main
     update_cache: yes
     state: present
 
