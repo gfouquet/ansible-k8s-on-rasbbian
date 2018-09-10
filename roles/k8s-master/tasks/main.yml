@@ -1,3 +1,29 @@
 ---
 - name: Initialize master node
-  command: kubeadm init --token-ttl=0
+  command: "kubeadm init --token-ttl=0 --apiserver-advertise-address={{ ansible_host }}"
+  register: kube_init
+  tags:
+    - kube
+    - kube_init
+
+- set_fact:
+    kube_master_token: "{{ kube_init.stdout | regex_search(token_regexp) }}"
+    kube_join_cli: "{{ kube_init.stdout | regex_search(join_regexp) }}"
+  vars:
+    token_regexp: "(?<=\\[bootstraptoken\\] using token: )[a-z0-9]{6}\\.[a-z0-9]{16}"
+    join_regexp: "kubeadm join .+"
+  tags:
+    - kube
+    - kube_init
+
+- debug:
+    var: kube_master_token
+  tags:
+    - kube
+    - kube_init
+
+- debug:
+    var: kube_join_cli
+  tags:
+    - kube
+    - kube_init

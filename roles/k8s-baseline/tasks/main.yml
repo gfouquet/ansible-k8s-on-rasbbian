@@ -95,14 +95,20 @@
   apt_key:
     url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
     state: present
+  tags:
+    - kube
 
 - name: Add k8s repo
   apt_repository:
     repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
     update_cache: yes
     state: present
+  tags:
+    - kube
 
 - name: Install kubeadm
   apt:
     name: kubeadm
     state: latest
+  tags:
+    - kube
