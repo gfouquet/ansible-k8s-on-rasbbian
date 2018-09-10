@@ -98,7 +98,7 @@
 
 - name: Add k8s repo
   apt_repository:
-    repo: deb http://apt.kubernetes.io/ kubernetes-stretch main
+    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
     update_cache: yes
     state: present
 
