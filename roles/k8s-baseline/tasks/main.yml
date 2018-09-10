@@ -17,6 +17,7 @@
 
 - name: Set hostname
   command: "raspi-config nonint do_hostname {{ inventory_hostname }}"
+  register: hostname
 
 - name: Configure static ip & network
   template:
@@ -25,31 +26,14 @@
     owner: root
     group: netdev
     mode: 0664
+  register: dhcpcd
 
-- name: Get Docker installer
-  get_url:
-    url: http://get.docker.com
-    dest: /tmp/install-docker
-    mode: "u+x"
-
-- name: Install Docker
-  command: /tmp/install-docker
-
-- name: Remove installer
-  file:
-    path: /tmp/install-docker
-    state: absent
-
-- name: Create Docker group
-  group:
-    name: docker
-    state: present
-
-- name: Add current user to docker group
-  user:
-    name: "{{ ansible_user }}"
-    state: present
-    groups: docker
+- name: Restart dhcpcd
+  systemd:
+    daemon_reload: yes
+    name: dhcpcd
+    state: restarted
+  when: dhcpcd is changed
 
 - name: Turn off swap
   command: dphys-swapfile swapoff
@@ -80,7 +64,32 @@
     sleep: 5
     delay: 5
     timeout: 300
-  when: cmdline is changed
+  when: cmdline or hostname is changed
+
+- name: Get Docker installer
+  get_url:
+    url: http://get.docker.com
+    dest: /tmp/install-docker
+    mode: "u+x"
+
+- name: Install Docker
+  command: /tmp/install-docker
+
+- name: Remove installer
+  file:
+    path: /tmp/install-docker
+    state: absent
+
+- name: Create Docker group
+  group:
+    name: docker
+    state: present
+
+- name: Add current user to docker group
+  user:
+    name: "{{ ansible_user }}"
+    state: present
+    groups: docker
 
 - name: Add k8s repo key
   apt_key:
