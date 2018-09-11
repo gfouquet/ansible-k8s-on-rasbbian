@@ -7,7 +7,6 @@
 
 - hosts: masters
   remote_user: pi
-  become: yes
   tasks:
     - import_role:
         name: k8s-master

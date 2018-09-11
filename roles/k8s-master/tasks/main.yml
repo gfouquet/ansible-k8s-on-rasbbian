@@ -1,7 +1,14 @@
 ---
 - name: Initialize master node
   command: "kubeadm init --token-ttl=0 --apiserver-advertise-address={{ ansible_host }}"
+  become: yes
   register: kube_init
+  tags:
+    - kube
+    - kube_init
+
+- debug:
+    var: kube_init
   tags:
     - kube
     - kube_init
@@ -27,3 +34,34 @@
   tags:
     - kube
     - kube_init
+
+- file:
+    path: "~/.kube"
+    state: directory
+  tags:
+    - kube
+    - kube_init
+
+- copy:
+    remote_src: yes
+    src: /etc/kubernetes/admin.conf
+    dest: "~{{ ansible_user }}/.kube/config"
+    owner: "{{ ansible_user }}"
+    group: pi
+  become: yes
+  tags:
+    - kube
+    - kube_init
+
+- name: Install Weave Net overlay network driver
+  shell: "kubectl apply -f \"https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')\""
+  tags:
+    - kube
+    - kube_net
+
+
+
+
+#mkdir -p $HOME/.kube
+#  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+#  sudo chown $(id -u):$(id -g) $HOME/.kube/config
