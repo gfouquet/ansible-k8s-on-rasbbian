@@ -1,23 +1,31 @@
 ---
 - name: Create ssh folder
   file:
-    path: "~{{ ansible_user }}/.ssh"
+    path: "~/.ssh"
     state: directory
-    owner: "{{ ansible_user }}"
-    group: pi
     mode: 0700
+  tags:
+    - ssh
 
 - name: Set authorized ssh keys
   template:
     src: authorized_keys.j2
-    dest: "~{{ ansible_user }}/.ssh/authorized_keys"
-    owner: "{{ ansible_user }}"
-    group: pi
+    dest: "~/.ssh/authorized_keys"
     mode: 0600
+  tags:
+    - ssh
 
 - name: Set hostname
   command: "raspi-config nonint do_hostname {{ inventory_hostname }}"
+  become: yes
   register: hostname
+  tags:
+    - hostname
+
+- debug:
+    var: hostname
+  tags:
+    - hostname
 
 - name: Configure static ip & network
   template:
@@ -27,6 +35,8 @@
     group: netdev
     mode: 0664
   register: dhcpcd
+  tags:
+    - static_ip
 
 - name: Restart dhcpcd
   systemd:
@@ -34,15 +44,8 @@
     name: dhcpcd
     state: restarted
   when: dhcpcd is changed
-
-- name: Turn off swap
-  command: dphys-swapfile swapoff
-
-- name: Remove swap
-  command: dphys-swapfile uninstall
-
-- name: Remove swap utility
-  command: update-rc.d dphys-swapfile remove
+  tags:
+    - static_ip
 
 - name: Configure cgroups
   copy:
@@ -51,50 +54,99 @@
     owner: root
     mode: 0755
   register: cmdline
+  tags:
+    - cgroups
 
-- name: Reboot on cgroup config change
+- debug:
+    var: cmdline
+  tags:
+    - cgroups
+
+- name: Upgrade all packages
+  apt:
+    update_cache: yes
+    upgrade: yes
+    autoremove: yes
+    autoclean: yes
+  become: yes
+
+- name: Reboot
   shell: "sleep 5 && reboot"
   async: 1
   poll: 0
-  when: cmdline is changed
+  become: yes
+  when: cmdline or hostname is changed
+  tags:
+    - cgroups
+    - hostname
 
-- name: Wait for the reboot to complete if there was a change
+- name: Wait for the reboot to complete
   wait_for_connection:
     connect_timeout: 20
     sleep: 5
     delay: 5
     timeout: 300
   when: cmdline or hostname is changed
+  tags:
+    - cgroups
+    - hostname
+
+- name: Turn off & remove swap
+  shell: dphys-swapfile swapoff && dphys-swapfile uninstall && update-rc.d dphys-swapfile remove
+  become: yes
+  tags:
+    - docker
+    - swap
+
+- name: Check docker installation
+  stat:
+    path: /usr/bin/docker
+  register: has_docker
 
 - name: Get Docker installer
   get_url:
     url: http://get.docker.com
     dest: /tmp/install-docker
     mode: "u+x"
+  when: has_docker.stat.exists == False
+  tags:
+    - docker
 
 - name: Install Docker
   command: /tmp/install-docker
+  become: yes
+  when: has_docker.stat.exists == False
+  tags:
+    - docker
 
 - name: Remove installer
   file:
     path: /tmp/install-docker
     state: absent
+  tags:
+    - docker
 
 - name: Create Docker group
   group:
     name: docker
     state: present
+  become: yes
+  tags:
+    - docker
 
 - name: Add current user to docker group
   user:
     name: "{{ ansible_user }}"
     state: present
     groups: docker
+  tags:
+    - docker
 
 - name: Add k8s repo key
   apt_key:
     url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
     state: present
+  become: yes
   tags:
     - kube
 
@@ -103,6 +155,7 @@
     repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
     update_cache: yes
     state: present
+  become: yes
   tags:
     - kube
 
@@ -110,5 +163,8 @@
   apt:
     name: kubeadm
     state: latest
+    autoclean: yes
+    autoremove: yes
+  become: yes
   tags:
     - kube
