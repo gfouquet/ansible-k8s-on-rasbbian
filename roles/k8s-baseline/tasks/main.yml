@@ -34,6 +34,7 @@
     owner: root
     group: netdev
     mode: 0664
+  become: yes
   register: dhcpcd
   tags:
     - static_ip
@@ -43,6 +44,7 @@
     daemon_reload: yes
     name: dhcpcd
     state: restarted
+  become: yes
   when: dhcpcd is changed
   tags:
     - static_ip
@@ -53,6 +55,7 @@
     dest: /boot/cmdline.txt
     owner: root
     mode: 0755
+  become: yes
   register: cmdline
   tags:
     - cgroups
@@ -139,6 +142,7 @@
     name: "{{ ansible_user }}"
     state: present
     groups: docker
+  become: yes
   tags:
     - docker
 
