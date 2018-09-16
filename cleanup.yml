@@ -1,6 +1,5 @@
 ---
 - hosts: all
-#  remote_user: pi
   tasks:
   - name: remove kubeadm
     command: kubeadm reset --force

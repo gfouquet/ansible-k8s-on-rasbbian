@@ -1,0 +1,5 @@
+---
+- hosts: masters
+  tasks:
+    - import_role:
+        name: k8s-dashboard
