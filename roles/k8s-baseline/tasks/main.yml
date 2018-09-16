@@ -15,15 +15,22 @@
   tags:
     - ssh
 
-- name: Set hostname
-  command: "raspi-config nonint do_hostname {{ inventory_hostname }}"
+- name: Get hostname
+  command: "raspi-config nonint get_hostname"
   become: yes
   register: hostname
   tags:
     - hostname
 
-- debug:
-    var: hostname
+- set_fact:
+    change_hostname: "{{hostname.stdout != inventory_hostname}}"
+  tags:
+    - hostname
+
+- name: Set hostname
+  command: "raspi-config nonint do_hostname {{ inventory_hostname }}"
+  become: yes
+  when: change_hostname
   tags:
     - hostname
 
@@ -78,7 +85,7 @@
   async: 1
   poll: 0
   become: yes
-  when: cmdline or hostname is changed
+  when: (cmdline is changed) or change_hostname
   tags:
     - cgroups
     - hostname
@@ -89,7 +96,7 @@
     sleep: 5
     delay: 5
     timeout: 300
-  when: cmdline or hostname is changed
+  when: (cmdline is changed) or change_hostname
   tags:
     - cgroups
     - hostname
