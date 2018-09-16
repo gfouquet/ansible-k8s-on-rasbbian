@@ -1,1 +1,12 @@
 ---
+- debug:
+    msg: "{{ hostvars | json_query('*.kube_join_cli | [0]') }}"
+  tags:
+    - kube
+    - kube_worker
+
+- shell: "{{ hostvars | json_query('*.kube_join_cli | [0]') }}"
+  become: true
+  tags:
+    - kube
+    - kube_worker
