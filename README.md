@@ -41,6 +41,12 @@ The `cleanup.yml` playbook resets kubernetes which is required before reinstalli
 This playbook is experimental 
 
 
+Local machine (Writing in Progress) 
+-----------------------------------
+* install kubectl and cluster config file
+* install the correct version of helm (should match installed tiller) - tricky with homebrew
+* access dashboard : `kubectl proxy& ` then [http://localhost:8001/api/v1/namespaces/kube-system/services/kubernetes-dashboard/proxy/#!/about?namespace=default]
+
 
 [K8s on Raspbian]: https://gist.github.com/alexellis/fdbc90de7691a1b9edb545c17da2d975
 [K8s on Hypriot]: https://blog.hypriot.com/post/setup-kubernetes-raspberry-pi-cluster/
