@@ -5,8 +5,19 @@
     - kube
     - kube_worker
 
-- shell: "{{ hostvars | json_query('*.kube_join_cli | [0]') }}"
+- name: Configure k8s worker service
+  shell: "{{ hostvars | json_query('*.kube_join_cli | [0]') }}"
   become: true
   tags:
     - kube
     - kube_worker
+
+- name: Restart k8s service
+  systemd:
+    daemon_reload: yes
+    name: kubelet
+    state: restarted
+  become: yes
+    - kube
+    - kube_init
+
