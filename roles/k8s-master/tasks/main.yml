@@ -102,13 +102,6 @@
   tags:
     - helm
 
-- name: Install Tiller
-  command: /usr/local/bin/helm init --upgrade --tiller-image=jessestuart/tiller:v2.9.1
-# TODO améliorer
-  when: has_helm.stat.exists == False
-  tags:
-    - helm
-
 - copy:
     src: "{{ role_path }}/files/tiller-rbac.yml"
     dest: /tmp/k8s-master/
@@ -120,7 +113,13 @@
   tags:
     - helm
 
-#mkdir -p $HOME/.kube
+- name: Install Tiller
+  command: /usr/local/bin/helm init --upgrade --tiller-image=jessestuart/tiller:v2.9.1 --service-account tiller
+# TODO améliorer
+  when: has_helm.stat.exists == False
+  tags:
+    - helm
+    #mkdir -p $HOME/.kube
 #  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 #  sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
