@@ -75,7 +75,53 @@
     - kube
     - kube_net
 
+- name: Check Helm installation
+  stat:
+    path: /usr/local/bin/helm
+  register: has_helm
+  tags:
+    - helm
+
+- name: Download Helm installer
+  unarchive:
+    src: "https://storage.googleapis.com/kubernetes-helm/helm-v{{ helm_version }}-linux-arm.tar.gz"
+    dest: /tmp
+    remote_src: yes
+  become: yes
+  when: has_helm.stat.exists == False
+  tags:
+    - helm
+
+- name: Install Helm
+  command: "mv /tmp/linux-arm/{{ item }} /usr/local/bin/{{ item }}"
+  become: yes
+  when: has_helm.stat.exists == False
+  loop:
+    - "helm"
+    - "tiller"
+  tags:
+    - helm
+
+- name: Install Tiller
+  command: /usr/local/bin/helm init --upgrade --tiller-image=jessestuart/tiller:v2.9.1
+# TODO améliorer
+  when: has_helm.stat.exists == False
+  tags:
+    - helm
+
+- copy:
+    src: "{{ role_path }}/files/tiller-rbac.yml"
+    dest: /tmp/k8s-master/
+  tags:
+    - helm
+
+- name: Configure tiller service account
+  command: 'kubectl apply -f /tmp/k8s-master/tiller-rbac.yml'
+  tags:
+    - helm
 
 #mkdir -p $HOME/.kube
 #  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 #  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+
